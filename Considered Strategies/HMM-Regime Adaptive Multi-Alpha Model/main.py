@@ -68,10 +68,10 @@ class HMMRegimeAlgo(QCAlgorithm):
             self.plot("QQQ Regime", "Regime", regime)
 
             #Regime 0: Strong Bullish Trend
-            #Regime 1: Low Volatility Mean Reversion
-            #Regime 2: Strong bearish trend/ breakdown
-            #Regime 3: Volatile Bullish Recovery / Choppy Uptrend
-
+            #Regime 1: Volatile Bullish Recovery / Choppy Uptrend
+            #Regime 2: Low Volatility Mean ReversionStrong bearish trend/ breakdown
+            #Regime 3: Strong bearish trend/ breakdown
+    
 
             self.debug(f"Predicted regime: {regime}")
 
