@@ -125,7 +125,6 @@ class RLTradingAlgorithm(QCAlgorithm):
             self.env.training = False
             self.env.norm_reward = False
 
-            # === After loading vec_env from /tmp/vec.pkl ===
             assert self.env.observation_space.shape == (9,), f"Loaded VecNormalize expects shape {self.env.observation_space.shape}, expected (9,)"
 
             self.model = PPO.load("/tmp/agent.zip", env=self.env)
