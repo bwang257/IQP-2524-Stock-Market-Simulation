@@ -1,5 +1,5 @@
 from AlgorithmImports import *
-from myfunctions import hurst_lssd
+from hurst_oracle import hurst_lssd
 from trendCalculator import get_trend
 from macd_oracle import get_macd_score
 from bollinger_oracle import get_bollinger_buy_and_short
