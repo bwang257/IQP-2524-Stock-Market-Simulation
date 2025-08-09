@@ -9,12 +9,6 @@ from collections import deque, defaultdict
 import math
 # endregion
 
-# region imports
-from AlgorithmImports import *
-# from alpha import *
-from PortfolioConstructor import MLP_PortfolioConstructionModel
-# endregion
-
 
 class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
 
@@ -30,7 +24,7 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
         
         self.set_warm_up(timedelta(days=5))
 
-        # Core market assets for regime detection
+        # Set Up Regime Detection System
         self._spy = self.add_equity("SPY", Resolution.MINUTE).symbol
         self._vix = self.add_equity("VIX", Resolution.MINUTE).symbol
         self._tlt = self.add_equity("TLT", Resolution.MINUTE).symbol
@@ -39,13 +33,8 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
         self._gld = self.add_equity("GLD", Resolution.MINUTE).symbol
         self.set_benchmark(self._spy)
 
-        # Comprehensive indicator suite
         self._indicators = self.setup_comprehensive_indicators()
-        
-        # Advanced regime detection system
         self._regime_detector = AdvancedRegimeDetector(self)
-        
-        # Dynamic signal generation - FIX: Actually create the signal generator
         self._signal_generator = DynamicSignalGenerator(self)
         
         # Portfolio management
@@ -61,9 +50,6 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
         
         # Portfolio construction
         self.set_portfolio_construction(InsightWeightingPortfolioConstructionModel())
-        
-        # Risk management
-        # self.add_risk_management(AdaptiveRiskManagementModel(self))
         
         # Execution
         self.set_execution(ImmediateExecutionModel())
@@ -98,7 +84,6 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
             return curr_time.hour % 6 == 0  # Every 6 hours in neutral markets
 
     def setup_comprehensive_indicators(self):
-        """Setup comprehensive indicator suite"""
         indicators = {}
         
         # Trend indicators
@@ -154,7 +139,6 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
         return indicators
 
     def market_open(self):
-        """Market open routine"""
         self._regime_detector.daily_reset()
         self._signal_generator.daily_reset()
         self._portfolio_manager.daily_reset()
@@ -175,7 +159,6 @@ class OptimizedRegimeAdaptiveAlgo(QCAlgorithm):
 
 
 class AdvancedRegimeDetector:
-    """Advanced multi-factor regime detection system"""
     
     def __init__(self, algorithm):
         self._algo = algorithm
@@ -206,14 +189,12 @@ class AdvancedRegimeDetector:
         return self._current_regime
 
     def daily_reset(self):
-        """Daily regime reset"""
         self._regime_history.append(self._current_regime)
 
     def update_fast_regime(self):
-        """Fast regime detection using key indicators"""
         indicators = self._algo._indicators
         
-        # Crisis detection (highest priority)
+        # Crisis detection
         if self.detect_crisis_regime(indicators):
             self._current_regime = 'CRISIS'
             self._regime_confidence = 0.95
@@ -232,7 +213,6 @@ class AdvancedRegimeDetector:
             self._regime_confidence = 0.7
 
     def detect_crisis_regime(self, indicators):
-        """Detect crisis/extreme market conditions using multiple indicators"""
         crisis_score = 0
         
         # VIX spike detection
@@ -281,7 +261,6 @@ class AdvancedRegimeDetector:
         return crisis_score >= 4  # Threshold for crisis detection
 
     def assess_volatility_fast(self, indicators):
-        """Fast volatility assessment"""
         if not indicators['spy_atr'].is_ready:
             return 'NORMAL'
         
@@ -295,7 +274,6 @@ class AdvancedRegimeDetector:
             return 'LOW'
 
     def assess_trend_fast(self, indicators):
-        """Fast trend assessment"""
         if not indicators['spy_adx'].is_ready or not indicators['spy_sma_20'].is_ready:
             return 'NEUTRAL'
         
@@ -323,7 +301,6 @@ class AdvancedRegimeDetector:
             return 'RANGING'
 
     def assess_momentum_fast(self, indicators):
-        """Fast momentum assessment using multiple indicators"""
         if not indicators['spy_rsi'].is_ready or not indicators['spy_macd'].is_ready:
             return 'NEUTRAL'
         
@@ -376,7 +353,6 @@ class AdvancedRegimeDetector:
             return 'NEUTRAL'
 
     def combine_fast_signals(self, volatility_signal, trend_signal, momentum_signal):
-        """Combine fast signals into regime"""
         self._algo.log(f"volatility: {volatility_signal}, trend signal: {trend_signal}, momentum signal: {momentum_signal}")
         if trend_signal in ['STRONG_BULL', 'WEAK_BULL']:
             if volatility_signal == 'LOW' and momentum_signal == 'BULLISH':
@@ -399,7 +375,6 @@ class AdvancedRegimeDetector:
             return 'NEUTRAL'
 
     def update_comprehensive_regime(self):
-        """Comprehensive regime analysis"""
         indicators = self._algo._indicators
         
         # Calculate regime scores
@@ -422,29 +397,27 @@ class AdvancedRegimeDetector:
                 self._regime_confidence = min(confidence, 0.95)
 
     def calculate_regime_score(self, regime, indicators):
-        """Calculate comprehensive regime score"""
         score = 0.0
         
-        # Trend component (40% weight)
+        # Trend component 
         trend_score = self.calculate_trend_score(regime, indicators)
         score += trend_score * 0.4
         
-        # Volatility component (30% weight)
+        # Volatility component
         volatility_score = self.calculate_volatility_score(regime, indicators)
         score += volatility_score * 0.3
         
-        # Momentum component (20% weight)
+        # Momentum component 
         momentum_score = self.calculate_momentum_score(regime, indicators)
         score += momentum_score * 0.2
         
-        # Market structure component (10% weight)
+        # Market structure component 
         structure_score = self.calculate_structure_score(regime, indicators)
         score += structure_score * 0.1
         
         return np.clip(score, 0, 1)
 
     def calculate_trend_score(self, regime, indicators):
-        """Calculate trend component score using multiple indicators"""
         if not indicators['spy_adx'].is_ready:
             return 0.5
         
@@ -452,13 +425,13 @@ class AdvancedRegimeDetector:
         current_price = self._algo.securities[self._algo._spy].price
         total_score = 0.0
         
-        # ADX trend strength (40% weight)
+        # ADX trend strength 
         if regime in ['TRENDING_BULL', 'TRENDING_BEAR']:
             total_score += min(adx_value / 50, 1.0) * 0.4
         else:
             total_score += max(0, (40 - adx_value) / 40) * 0.4
         
-        # Moving average alignment (30% weight)
+        # Moving average alignment
         if indicators['spy_sma_10'].is_ready and indicators['spy_sma_20'].is_ready and indicators['spy_sma_50'].is_ready:
             sma_10 = indicators['spy_sma_10'].current.value
             sma_20 = indicators['spy_sma_20'].current.value
@@ -480,7 +453,7 @@ class AdvancedRegimeDetector:
                 if sma_10 * 0.98 < current_price < sma_10 * 1.02:
                     total_score += 0.2
         
-        # Aroon trend confirmation (20% weight)
+        # Aroon trend confirmation 
         if indicators['spy_aroon'].is_ready:
             aroon_up = indicators['spy_aroon'].aroon_up.current.value
             aroon_down = indicators['spy_aroon'].aroon_down.current.value
@@ -492,7 +465,7 @@ class AdvancedRegimeDetector:
             elif regime in ['RANGING_LOW_VOL', 'RANGING_HIGH_VOL'] and aroon_up < 60 and aroon_down < 60:
                 total_score += 0.15
         
-        # Parabolic SAR trend confirmation (10% weight)
+        # Parabolic SAR trend confirmation (
         if indicators['spy_psar'].is_ready:
             psar_value = indicators['spy_psar'].current.value
             
@@ -504,7 +477,6 @@ class AdvancedRegimeDetector:
         return min(total_score, 1.0)
 
     def calculate_volatility_score(self, regime, indicators):
-        """Calculate volatility component score using multiple indicators"""
         if not indicators['spy_atr'].is_ready:
             return 0.5
         
@@ -512,12 +484,12 @@ class AdvancedRegimeDetector:
         target_vol = self._regimes[regime]['volatility_target']
         total_score = 0.0
         
-        # ATR volatility alignment (50% weight)
+        # ATR volatility alignment 
         vol_diff = abs(atr_value - target_vol)
         atr_score = max(0, 1 - vol_diff * 10)
         total_score += atr_score * 0.5
         
-        # Choppiness Index alignment (30% weight)
+        # Choppiness Index alignment 
         if indicators['spy_chop'].is_ready:
             chop_value = indicators['spy_chop'].current.value
             
@@ -528,7 +500,7 @@ class AdvancedRegimeDetector:
             elif 38.2 <= chop_value <= 61.8:
                 total_score += 0.15  # Neutral choppiness
         
-        # Bollinger Band width for volatility confirmation (20% weight)
+        # Bollinger Band width for volatility confirmation 
         if indicators['spy_bb'].is_ready:
             bb_upper = indicators['spy_bb'].upper_band.current.value
             bb_lower = indicators['spy_bb'].lower_band.current.value
@@ -547,7 +519,6 @@ class AdvancedRegimeDetector:
         return min(total_score, 1.0)
 
     def calculate_momentum_score(self, regime, indicators):
-        """Calculate momentum component score using multiple indicators"""
         if not indicators['spy_rsi'].is_ready or not indicators['spy_macd'].is_ready:
             return 0.5
         
@@ -558,21 +529,21 @@ class AdvancedRegimeDetector:
         momentum_factor = self._regimes[regime]['momentum_factor']
         total_score = 0.0
         
-        # RSI momentum alignment (25% weight)
+        # RSI momentum alignment
         rsi_momentum = (rsi_value - 50) / 50
         if regime in ['TRENDING_BULL', 'RANGING_LOW_VOL']:
             total_score += max(0, rsi_momentum) * 0.25
         elif regime in ['TRENDING_BEAR']:
             total_score += max(0, -rsi_momentum) * 0.25
         
-        # MACD momentum alignment (25% weight)
+        # MACD momentum alignment 
         macd_momentum = 1 if macd_value > macd_signal else -1
         if regime in ['TRENDING_BULL', 'RANGING_LOW_VOL'] and macd_momentum > 0:
             total_score += 0.25
         elif regime in ['TRENDING_BEAR'] and macd_momentum < 0:
             total_score += 0.25
         
-        # CCI momentum (20% weight)
+        # CCI momentum 
         if indicators['spy_cci'].is_ready:
             cci_value = indicators['spy_cci'].current.value
             cci_normalized = np.tanh(cci_value / 200)  # Normalize to -1 to 1
@@ -581,7 +552,7 @@ class AdvancedRegimeDetector:
             elif regime in ['TRENDING_BEAR'] and cci_normalized < 0:
                 total_score += abs(cci_normalized) * 0.2
         
-        # Williams %R confirmation (15% weight)
+        # Williams %R confirmation
         if indicators['spy_williams'].is_ready:
             williams_value = indicators['spy_williams'].current.value
             williams_normalized = (williams_value + 50) / 50  # Convert to -1 to 1 scale
@@ -590,7 +561,7 @@ class AdvancedRegimeDetector:
             elif regime in ['TRENDING_BEAR'] and williams_normalized < 0:
                 total_score += abs(williams_normalized) * 0.15
         
-        # MFI volume-price momentum (15% weight)
+        # MFI volume-price momentum
         if indicators['spy_mfi'].is_ready:
             mfi_value = indicators['spy_mfi'].current.value
             mfi_momentum = (mfi_value - 50) / 50
@@ -602,7 +573,6 @@ class AdvancedRegimeDetector:
         return min(total_score * momentum_factor, 1.0)
 
     def calculate_structure_score(self, regime, indicators):
-        """Calculate market structure component score"""
         score = 0.0
         current_price = self._algo.securities[self._algo._spy].price
         
@@ -662,12 +632,10 @@ class AdvancedRegimeDetector:
         return min(score, 1.0)
 
     def get_regime_parameters(self):
-        """Get current regime parameters"""
         return self._regimes.get(self._current_regime, self._regimes['NEUTRAL'])
 
 
 class DynamicSignalGenerator:
-    """Dynamic signal generation based on regime"""
     
     def __init__(self, algorithm):
         self._algo = algorithm
@@ -675,12 +643,10 @@ class DynamicSignalGenerator:
         self._signal_history = deque(maxlen=50)
 
     def daily_reset(self):
-        """Daily signal reset"""
         self._signals = {}
 
 
     def generate_signals(self, symbols):
-        """Generate signals for given symbols"""
         regime_params = self._algo._regime_detector.get_regime_parameters()
         current_regime = self._algo._regime_detector._current_regime
         
@@ -703,8 +669,7 @@ class DynamicSignalGenerator:
         
         return signals
 
-    def apply_light_regime_adjustments(self, signal, regime):
-        """Apply lighter regime-specific signal adjustments"""
+    def apply_light_regime_adjustments(self, signal, regime)
         if regime == 'CRISIS':
             return signal * 0.7  # Less reduction in crisis
         elif regime == 'TRENDING_BULL':
@@ -715,7 +680,6 @@ class DynamicSignalGenerator:
             return signal
 
     def get_cross_asset_signals(self):
-        """Calculate cross-asset signals manually (no ratio indicator exists)"""
         signals = {}
         
         if (self._algo._spy in self._algo.securities and 
@@ -745,7 +709,6 @@ class DynamicSignalGenerator:
         return signals
 
     def generate_momentum_signal(self, symbol, regime_params):
-        """Generate momentum-based signal using multiple indicators"""
         if symbol not in self._algo.securities:
             return 0.0
         
@@ -772,32 +735,32 @@ class DynamicSignalGenerator:
         # Multi-indicator momentum signal
         momentum_signals = []
         
-        # RSI momentum (25% weight)
+        # RSI momentum 
         if self._algo._indicators[rsi_key].is_ready:
             rsi_value = self._algo._indicators[rsi_key].current.value
             rsi_signal = (rsi_value - 50) / 50
             momentum_signals.append(rsi_signal * 0.25)
         
-        # MACD momentum (25% weight)
+        # MACD momentum 
         if self._algo._indicators[macd_key].is_ready:
             macd_value = self._algo._indicators[macd_key].current.value
             macd_signal_value = self._algo._indicators[macd_key].signal.current.value
             macd_signal = 1 if macd_value > macd_signal_value else -1
             momentum_signals.append(macd_signal * 0.25)
         
-        # CCI momentum (20% weight)
+        # CCI momentum 
         if self._algo._indicators[cci_key].is_ready:
             cci_value = self._algo._indicators[cci_key].current.value
             cci_signal = np.tanh(cci_value / 200)  # Normalize to -1 to 1
             momentum_signals.append(cci_signal * 0.2)
         
-        # Williams %R momentum (15% weight)
+        # Williams %R momentum 
         if self._algo._indicators[williams_key].is_ready:
             williams_value = self._algo._indicators[williams_key].current.value
             williams_signal = (williams_value + 50) / 50  # Convert to -1 to 1
             momentum_signals.append(williams_signal * 0.15)
         
-        # Stochastic momentum (15% weight)
+        # Stochastic momentum 
         if self._algo._indicators[stoch_key].is_ready:
             stoch_k = self._algo._indicators[stoch_key].stoch_k.current.value
             stoch_signal = (stoch_k - 50) / 50
@@ -810,7 +773,6 @@ class DynamicSignalGenerator:
         return np.clip(signal, -1, 1)
 
     def generate_mean_reversion_signal(self, symbol, regime_params):
-        """Generate mean reversion signal using multiple indicators"""
         if symbol not in self._algo.securities:
             return 0.0
         
@@ -837,7 +799,7 @@ class DynamicSignalGenerator:
         
         reversion_signals = []
         
-        # Bollinger Bands mean reversion (40% weight)
+        # Bollinger Bands mean reversion 
         if self._algo._indicators[bb_key].is_ready:
             bb_upper = self._algo._indicators[bb_key].upper_band.current.value
             bb_lower = self._algo._indicators[bb_key].lower_band.current.value
@@ -854,7 +816,7 @@ class DynamicSignalGenerator:
                     # Revert to middle
                     reversion_signals.append((0.5 - bb_position) * 0.8 * 0.4)
         
-        # RSI mean reversion (25% weight)
+        # RSI mean reversion 
         if self._algo._indicators[rsi_key].is_ready:
             rsi_value = self._algo._indicators[rsi_key].current.value
             
@@ -867,7 +829,7 @@ class DynamicSignalGenerator:
             elif rsi_value < 40:
                 reversion_signals.append(0.3 * 0.25)   # Mildly oversold
         
-        # Williams %R mean reversion (20% weight)
+        # Williams %R mean reversion 
         if self._algo._indicators[williams_key].is_ready:
             williams_value = self._algo._indicators[williams_key].current.value
             
@@ -880,7 +842,7 @@ class DynamicSignalGenerator:
             elif williams_value < -80:  # Oversold
                 reversion_signals.append(0.4 * 0.2)
         
-        # Stochastic RSI mean reversion (10% weight)
+        # Stochastic RSI mean reversion 
         if self._algo._indicators[stoch_rsi_key].is_ready:
             stoch_rsi_k = self._algo._indicators[stoch_rsi_key].k.current.value
             
@@ -889,7 +851,7 @@ class DynamicSignalGenerator:
             elif stoch_rsi_k < 15:
                 reversion_signals.append(0.6 * 0.1)
         
-        # MFI mean reversion (5% weight)
+        # MFI mean reversion 
         if self._algo._indicators[mfi_key].is_ready:
             mfi_value = self._algo._indicators[mfi_key].current.value
             
@@ -905,7 +867,6 @@ class DynamicSignalGenerator:
         return np.clip(signal, -1, 1)
 
     def apply_regime_adjustments(self, signal, regime):
-        """Apply regime-specific signal adjustments"""
         if regime == 'CRISIS':
             return signal * 0.3  # Reduce signal strength in crisis
         elif regime == 'TRENDING_BULL':
@@ -919,7 +880,6 @@ class DynamicSignalGenerator:
 
 
 class AdaptivePortfolioManager:
-    """Adaptive portfolio management"""
     
     def __init__(self, algorithm):
         self._algo = algorithm
@@ -928,11 +888,9 @@ class AdaptivePortfolioManager:
         self._max_position_size = 0.15
 
     def daily_reset(self):
-        """Daily portfolio reset"""
         pass
 
     def calculate_position_sizes(self, signals):
-        """Calculate position sizes based on signals and regime"""
         regime_params = self._algo._regime_detector.get_regime_parameters()
         current_regime = self._algo._regime_detector._current_regime
         
@@ -974,14 +932,12 @@ class AdaptivePortfolioManager:
    
 
 class RegimeAdaptiveAlphaModel(AlphaModel):
-    """Regime adaptive alpha generation"""
     
     def __init__(self, algorithm):
         self._algorithm = algorithm
         self._symbols_data = {}
 
     def update(self, algorithm, data):
-        """Generate alpha insights"""
         insights = []
         
         # Only generate insights if regime detection is ready and not warming up
@@ -1024,67 +980,4 @@ class RegimeAdaptiveAlphaModel(AlphaModel):
                 insights.append(insight)
         
         return insights
-
-
-class AdaptiveRiskManagementModel(RiskManagementModel):
-    """Adaptive risk management based on regime"""
-    
-    def __init__(self, algorithm):
-        self._algorithm = algorithm
-        self._max_portfolio_risk = 0.05  # 4% daily portfolio risk
-        self._max_position_risk = 0.02  # 1.2% per position risk
-
-    def manage_risk(self, algorithm, targets):
-        """Manage portfolio risk"""
-        risk_adjusted_targets = []
-        
-        current_regime = getattr(self._algorithm._regime_detector, '_current_regime', 'NEUTRAL')
-        
-        # Regime-based risk multipliers
-
-        risk_multipliers = {
-            'TRENDING_BULL': 1.2,
-            'TRENDING_BEAR': 1.0,
-            'RANGING_LOW_VOL': 1.0,
-            'RANGING_HIGH_VOL': 0.8,
-            'CRISIS': 0.6,
-            'NEUTRAL': 0.9
-        }
-        
-        risk_multiplier = risk_multipliers.get(current_regime, 0.9)
-        
-        # Check overall portfolio risk
-        total_risk = sum(abs(target.quantity * algorithm.securities[target.symbol].price) 
-                        for target in targets if target.symbol in algorithm.securities)
-        
-        portfolio_value = algorithm.portfolio.total_portfolio_value
-        portfolio_risk = total_risk / portfolio_value if portfolio_value > 0 else 0
-        
-        # Scale down if portfolio risk is too high
-        if portfolio_risk > self._max_portfolio_risk * risk_multiplier:
-            scale_factor = (self._max_portfolio_risk * risk_multiplier) / portfolio_risk
-            for target in targets:
-                new_quantity = target.quantity * scale_factor
-                risk_adjusted_targets.append(PortfolioTarget(target.symbol, new_quantity))
-        else:
-            risk_adjusted_targets = targets
-        
-        # Position-level risk management
-        final_targets = []
-        for target in risk_adjusted_targets:
-            if target.symbol in algorithm.securities:
-                position_value = abs(target.quantity * algorithm.securities[target.symbol].price)
-                position_risk = position_value / portfolio_value if portfolio_value > 0 else 0
-                
-                if position_risk <= self._max_position_risk * risk_multiplier:
-                    final_targets.append(target)
-                else:
-                    # Scale down position
-                    max_quantity = (self._max_position_risk * risk_multiplier * portfolio_value) / algorithm.securities[target.symbol].price
-                    scaled_quantity = max_quantity if target.quantity > 0 else -max_quantity
-                    final_targets.append(PortfolioTarget(target.symbol, scaled_quantity))
-        
-        return final_targets
-
-
 
